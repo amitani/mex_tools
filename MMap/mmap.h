@@ -9,9 +9,10 @@
 
 
 struct SmallDoubleMatrix {
+	static const unsigned int max_size = 500;
 	unsigned int height;
 	unsigned int width;
-	double data[500];
+	double data[max_size];
 };
 
 struct SingleImage {
@@ -19,7 +20,16 @@ struct SingleImage {
 	int16_t data[512 * 512];
 };
 
-template<class T> 
+struct SI4Image {
+	unsigned int frame_tag;
+	unsigned int height;
+	unsigned int width;
+	unsigned int n_ch;
+	static const unsigned int max_size = 1024 * 1024 * 3;
+	int16_t data[max_size];
+};
+
+template<class T>
 class MMap {
 public:
 	MMap(std::string name, bool only_if_exist = false);
@@ -27,8 +37,8 @@ public:
 	bool is_valid() {
 		return p_buf_;
 	}
-	bool get(T& destination);
-	bool set(const T& source);
+	int get(T& destination);
+	int set(const T& source, unsigned int num = sizeof(T));
 	const volatile T* get_pointer() {
 		return p_data_;
 	}
@@ -54,8 +64,9 @@ private:
 protected:
 	std::ostringstream error_;
 
+	volatile int* p_mmap_size_;
+	volatile int* p_data_size_;
 	volatile T* p_data_;
-	volatile int* p_size_;
 
 	bool wait_for_mutex(void);
 	bool release_mutex(void) {
@@ -64,7 +75,6 @@ protected:
 
 	void clear(void);
 };
-
 
 template<class T>
 MMap<T>::MMap(std::string name, bool only_if_exist) :base_name_(name){
@@ -90,7 +100,7 @@ MMap<T>::MMap(std::string name, bool only_if_exist) :base_name_(name){
 	mmap_name_ = "MMAP_" + base_name_;
 	std::wstring w_mmap_name(mmap_name_.begin(), mmap_name_.end());
 
-	int required_mmap_size = sizeof(T) + sizeof(int);
+	int required_mmap_size = sizeof(T) + 2 * sizeof(int); // p_max_size_, p_size_
 	bool is_opened = true;
 	h_mapfile_ = OpenFileMapping(FILE_MAP_ALL_ACCESS, false, w_mmap_name.c_str());
 	if (!h_mapfile_) {
@@ -101,7 +111,7 @@ MMap<T>::MMap(std::string name, bool only_if_exist) :base_name_(name){
 			return;
 		}
 		else {
-			h_mapfile_ = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, required_mmap_size, w_mmap_name.c_str());
+			h_mapfile_ = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, required_mmap_size, w_mmap_name.c_str()); // zero-initialized
 			if (!h_mapfile_) {
 				error_ << "Could not open or create MMap. GLE=" << GetLastError() << ", size=" << required_mmap_size <<std::endl;
 				clear();
@@ -116,18 +126,19 @@ MMap<T>::MMap(std::string name, bool only_if_exist) :base_name_(name){
 		clear();
 		return;
 	}
-	p_size_ = reinterpret_cast<volatile int*>(p_buf_);
-	p_data_ = reinterpret_cast<volatile T*>(p_size_+1);
+	p_mmap_size_ = reinterpret_cast<volatile int*>(p_buf_);
+	p_data_size_ = reinterpret_cast<volatile int*>(p_mmap_size_ + 1);
+	p_data_ = reinterpret_cast<volatile T*>(p_data_size_ +1);
 
 	if (is_opened) {
-		if (*p_size_ != required_mmap_size) {
-			error_ << "Size mismatch: opened map size: " << *p_size_ << "bytes is different from: " << required_mmap_size << " bytes.\n";
+		if (*p_mmap_size_ != required_mmap_size) {
+			error_ << "Size mismatch: opened map size: " << *p_mmap_size_ << "bytes is different from: " << required_mmap_size << " bytes.\n";
 			clear();
 			return;
 		}
 	}
 	else {
-		*p_size_ = required_mmap_size;
+		*p_mmap_size_ = required_mmap_size;
 	}
 	return;
 }
@@ -153,28 +164,34 @@ bool MMap<T>::wait_for_mutex(void) {
 }
 
 template<class T>
-bool MMap<T>::set(const T& source) {
-	if (!is_valid()) return false;
-	bool res = false;
+int MMap<T>::set(const T& source, unsigned int num) {
+	if (!is_valid()) return -1;
+	if (num > sizeof(T)) return -3;
+	if (num < 0 ) return -4;
 	if (wait_for_mutex()) {
-		std::copy(&source, &source + 1, const_cast<T*>(p_data_));
+		*p_data_size_ = num;
+		memcpy((void*)(p_data_), (void*)(&source), num);
 		release_mutex();
-		res = true;
+		return num;
 	}
-	return res;
+	return -2;
 }
 
 template<class T>
-bool MMap<T>::get(T& destination) {
-	if (!is_valid()) return false;
+int MMap<T>::get(T& destination) {
+	if (!is_valid()) return -1;
 	if (wait_for_mutex()) {
-		std::copy(const_cast<T*>(p_data_), const_cast<T*>(p_data_ + 1), &destination);
+		unsigned int num = *p_data_size_;
+		if (num > sizeof(T)) {
+			release_mutex();
+			return -3;
+		}
+		memcpy((void*)(&destination), (void*)(p_data_), num);
 		release_mutex();
-		return true;
+		return num;
 	}
-	return false;
+	return -2;
 }
-
 
 template<class T>
 void MMap<T>::clear(void) {
