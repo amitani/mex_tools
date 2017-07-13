@@ -76,14 +76,14 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;MATLAB_MEX_FILE;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Users\Akinori\Downloads\opencv\build\install\include;%(AdditionalIncludeDirectories);C:\Program Files\MATLAB\R2014a\extern\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Akinori\Downloads\opencv\build\install\include;%(AdditionalIncludeDirectories);C:\Program Files\MATLAB\R2011b\extern\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\Akinori\Downloads\opencv\build\install\x64\vc12\lib;%(AdditionalLibraryDirectories);C:\Program Files\MATLAB\R2014a\extern\lib\win64\microsoft</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\Akinori\Downloads\opencv\build\install\x64\vc12\lib;%(AdditionalLibraryDirectories);C:\Program Files\MATLAB\R2011b\extern\lib\win64\microsoft</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>Source.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
