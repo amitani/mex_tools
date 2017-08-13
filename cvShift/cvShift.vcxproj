@@ -56,14 +56,14 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_SCL_SECURE_NO_WARNINGS;MATLAB_MEX_FILE;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;MATLAB_MEX_FILE;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Users\Aki\Downloads\libtiff_lib\lib;C:\opencv\build\install\include;%(AdditionalIncludeDirectories);C:\Program Files\MATLAB\R2014a\extern\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Akinori\Downloads\opencv\build\install\include;%(AdditionalIncludeDirectories);C:\Program Files\MATLAB\R2011b\extern\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\opencv\build\install\x64\vc14\lib;%(AdditionalLibraryDirectories);C:\Program Files\MATLAB\R2014a\extern\lib\win64\microsoft</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\Akinori\Downloads\opencv\build\install\x64\vc12\lib;%(AdditionalLibraryDirectories);C:\Program Files\MATLAB\R2011b\extern\lib\win64\microsoft</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>Source.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>

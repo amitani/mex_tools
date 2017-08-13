@@ -59,7 +59,7 @@ private:
 	std::string mutex_name_;
 	std::string mmap_name_;
 
-	void* p_buf_; // pointer to the beginning of memory map
+	void* p_buf_ = NULL; // pointer to the beginning of memory map
 
 protected:
 	std::ostringstream error_;
@@ -70,7 +70,8 @@ protected:
 
 	bool wait_for_mutex(void);
 	bool release_mutex(void) {
-		return ReleaseMutex(h_mutex_);
+		bool res = ReleaseMutex(h_mutex_);
+		return res;
 	}
 
 	void clear(void);
@@ -97,48 +98,55 @@ MMap<T>::MMap(std::string name, bool only_if_exist) :base_name_(name){
 		}
 	}
 
-	mmap_name_ = "MMAP_" + base_name_;
-	std::wstring w_mmap_name(mmap_name_.begin(), mmap_name_.end());
+	if (wait_for_mutex()) {
+		mmap_name_ = "MMAP_" + base_name_;
+		std::wstring w_mmap_name(mmap_name_.begin(), mmap_name_.end());
 
-	int required_mmap_size = sizeof(T) + 2 * sizeof(int); // p_max_size_, p_size_
-	bool is_opened = true;
-	h_mapfile_ = OpenFileMapping(FILE_MAP_ALL_ACCESS, false, w_mmap_name.c_str());
-	if (!h_mapfile_) {
-		is_opened = false;
-		if (only_if_exist) {
-			error_ << "Could not open MMap. GLE=" << GetLastError() << std::endl;
+		int required_mmap_size = sizeof(T)+2 * sizeof(int); // p_max_size_, p_size_
+		bool is_opened = true;
+		h_mapfile_ = OpenFileMapping(FILE_MAP_ALL_ACCESS, false, w_mmap_name.c_str());
+		if (!h_mapfile_) {
+			is_opened = false;
+			if (only_if_exist) {
+				error_ << "Could not open MMap. GLE=" << GetLastError() << std::endl;
+				clear();
+				return;
+			}
+			else {
+				h_mapfile_ = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, required_mmap_size, w_mmap_name.c_str()); // zero-initialized
+				if (!h_mapfile_) {
+					error_ << "Could not open or create MMap. GLE=" << GetLastError() << ", size=" << required_mmap_size << std::endl;
+					clear();
+					return;
+				}
+			}
+		}
+
+		p_buf_ = MapViewOfFile(h_mapfile_, FILE_MAP_WRITE, 0, 0, 0);
+		if (!p_buf_) {
+			error_ << "Could not obtain MapView. GLE=" << GetLastError() << std::endl;
 			clear();
 			return;
 		}
-		else {
-			h_mapfile_ = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, required_mmap_size, w_mmap_name.c_str()); // zero-initialized
-			if (!h_mapfile_) {
-				error_ << "Could not open or create MMap. GLE=" << GetLastError() << ", size=" << required_mmap_size <<std::endl;
+		p_mmap_size_ = reinterpret_cast<volatile int*>(p_buf_);
+		p_data_size_ = reinterpret_cast<volatile int*>(p_mmap_size_ + 1);
+		p_data_ = reinterpret_cast<volatile T*>(p_data_size_ + 1);
+
+		if (is_opened) {
+			if (*p_mmap_size_ != required_mmap_size) {
+				error_ << "Size mismatch: opened map size: " << *p_mmap_size_ << "bytes is different from: " << required_mmap_size << " bytes.\n";
 				clear();
 				return;
 			}
 		}
-	}
-
-	p_buf_ = MapViewOfFile(h_mapfile_, FILE_MAP_WRITE, 0, 0, 0);
-	if (!p_buf_) {
-		error_ << "Could not obtain MapView. GLE=" << GetLastError() << std::endl;
-		clear();
-		return;
-	}
-	p_mmap_size_ = reinterpret_cast<volatile int*>(p_buf_);
-	p_data_size_ = reinterpret_cast<volatile int*>(p_mmap_size_ + 1);
-	p_data_ = reinterpret_cast<volatile T*>(p_data_size_ +1);
-
-	if (is_opened) {
-		if (*p_mmap_size_ != required_mmap_size) {
-			error_ << "Size mismatch: opened map size: " << *p_mmap_size_ << "bytes is different from: " << required_mmap_size << " bytes.\n";
-			clear();
-			return;
+		else {
+			*p_mmap_size_ = required_mmap_size;
+			*p_data_size_ = sizeof(T);
 		}
+		release_mutex();
 	}
-	else {
-		*p_mmap_size_ = required_mmap_size;
+	else{
+		clear();
 	}
 	return;
 }
@@ -146,7 +154,8 @@ MMap<T>::MMap(std::string name, bool only_if_exist) :base_name_(name){
 template<class T>
 bool MMap<T>::wait_for_mutex(void) {
 	bool locked = false;
-	switch (WaitForSingleObject(h_mutex_, kMutexTimeout)) {
+	auto res = WaitForSingleObject(h_mutex_, kMutexTimeout);
+	switch (res) {
 	case WAIT_ABANDONED:
 		error_ << "Mutex was previously abandoned." << std::endl;
 	case WAIT_OBJECT_0:
@@ -171,7 +180,7 @@ int MMap<T>::set(const T& source, unsigned int num) {
 	if (wait_for_mutex()) {
 		*p_data_size_ = num;
 		memcpy((void*)(p_data_), (void*)(&source), num);
-		release_mutex();
+		if(!release_mutex()) return -5;
 		return num;
 	}
 	return -2;
@@ -183,11 +192,11 @@ int MMap<T>::get(T& destination) {
 	if (wait_for_mutex()) {
 		unsigned int num = *p_data_size_;
 		if (num > sizeof(T)) {
-			release_mutex();
+			if (!release_mutex()) return -6;
 			return -3;
 		}
 		memcpy((void*)(&destination), (void*)(p_data_), num);
-		release_mutex();
+		if (!release_mutex()) return -5;
 		return num;
 	}
 	return -2;

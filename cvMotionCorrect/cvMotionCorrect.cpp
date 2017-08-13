@@ -2,6 +2,7 @@
 //
 
 #include "stdafx.h"
+
 #include "image_registrator.h"
 
 #include <opencv2/opencv.hpp>

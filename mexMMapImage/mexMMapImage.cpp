@@ -97,7 +97,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 			int res = map_mmap[basename]->get(image);
 			if (res < 0) exit_with_error("Failed to read mmap. Error Code: " + std::to_string(-res));
 			if (res > 0) {
-				mxAssert(image.height * image.width * image.n_ch <= image.max_size);
+				mxAssert(image.height * image.width * image.n_ch <= image.max_size, "Matrix Size Corrupted");
 				mwSize return_size[] = { image.height, image.width, image.n_ch};
 				plhs[0] = mxCreateNumericArray(3, return_size, mxINT16_CLASS, mxREAL);
 				memcpy(mxGetData(plhs[0]), (void*)image.data, sizeof(int16_t)*image.height*image.width*image.n_ch);
