@@ -63,22 +63,22 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		cv::Mat template_image(2, size.data(), map_from_mx_to_cv[mxGetClassID(prhs[n_arg])],mxGetData(prhs[n_arg]));
 
 		matlab::ArgumentParser parser("");
-		parser.addVariant("align", 0, 6, std::vector<std::string>{"factor", "margin",
-			"sigma_smoothing", "sigma_normalization", "normalization_offset", "to_equalize_histogram"});
+		parser.addVariant("align", 0, 7, std::vector<std::string>{"factor", "margin", "marginh","marginw",
+			"sigma_smoothing", "sigma_normalization", "normalization_offset"});
 		matlab::MxArrayVector raw(prhs + 2, prhs + nrhs);
 		matlab::MxArrayVector reordered = parser.parse(raw);
 		cv::bridge::BridgeVector inputs(reordered.begin(), reordered.end());
 		double factor = inputs[0].empty() ? -1 : inputs[0].toDouble();
 		int    margin = inputs[1].empty() ? -1 : inputs[1].toDouble();
-		double sigma_smoothing = inputs[2].empty() ? -1 : inputs[2].toDouble();
-		double sigma_normalization = inputs[3].empty() ? -1 : inputs[3].toDouble();
-		double normalization_offset = inputs[4].empty() ? -1 : inputs[4].toDouble();
-		int to_equalize_histogram = inputs[5].empty() ? -1 : inputs[5].toDouble();
+		int    margin_h = inputs[2].empty() ? margin : inputs[2].toDouble();
+		int    margin_w = inputs[3].empty() ? margin : inputs[3].toDouble();
+		double sigma_smoothing = inputs[4].empty() ? -1 : inputs[4].toDouble();
+		double sigma_normalization = inputs[5].empty() ? -1 : inputs[5].toDouble();
+		double normalization_offset = inputs[6].empty() ? -1 : inputs[6].toDouble();
 
 		ImageRegistrator image_registrator;
 		image_registrator.SetTemplate(template_image);
-		image_registrator.SetParameters(factor, margin, sigma_smoothing, sigma_normalization,
-			normalization_offset, to_equalize_histogram);
+		image_registrator.SetParameters(factor, margin_h,margin_w, sigma_smoothing, sigma_normalization,normalization_offset);
 		image_registrator.Init();
 		std::vector<cv::Point2d> results;
 		results.reserve(source_images.size());
@@ -95,8 +95,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		plhs[0] = mxCreateNumericMatrix(source_images.size(), 2, mxDOUBLE_CLASS, mxREAL);
 		double * rv = (double *)(mxGetData(plhs[0]));
 		for (int i = 0; i<z; i++) {
-			rv[i + 0 * z] = -results[i].x;
-			rv[i + 1 * z] = -results[i].y;
+			rv[i + 0 * z] = -results[i].x; // y in matlab, more variable in current setup
+			rv[i + 1 * z] = -results[i].y; // x in matlab
 		}
 		if(nlhs>1){
 			std::vector<mwSize> output_size = { static_cast<mwSize>(heatmaps[0].size().width),
