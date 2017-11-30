@@ -13,6 +13,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mexMMapImage", "mexMMapImag
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mexBilinearShift", "mexBilinearShift\mexBilinearShift.vcxproj", "{2FE94CFE-AC71-485C-A33B-898086362DBC}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mexBilinearRegistrator", "mexBilinearRegistrator\mexBilinearRegistrator.vcxproj", "{AA5269DD-776B-45B4-BB88-9CFDD15C35DA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -79,6 +81,18 @@ Global
 		{2FE94CFE-AC71-485C-A33B-898086362DBC}.Release|x64.Build.0 = Release|x64
 		{2FE94CFE-AC71-485C-A33B-898086362DBC}.Release|x86.ActiveCfg = Release|Win32
 		{2FE94CFE-AC71-485C-A33B-898086362DBC}.Release|x86.Build.0 = Release|Win32
+		{AA5269DD-776B-45B4-BB88-9CFDD15C35DA}.Debug|Win32.ActiveCfg = Debug|Win32
+		{AA5269DD-776B-45B4-BB88-9CFDD15C35DA}.Debug|Win32.Build.0 = Debug|Win32
+		{AA5269DD-776B-45B4-BB88-9CFDD15C35DA}.Debug|x64.ActiveCfg = Debug|x64
+		{AA5269DD-776B-45B4-BB88-9CFDD15C35DA}.Debug|x64.Build.0 = Debug|x64
+		{AA5269DD-776B-45B4-BB88-9CFDD15C35DA}.Debug|x86.ActiveCfg = Debug|Win32
+		{AA5269DD-776B-45B4-BB88-9CFDD15C35DA}.Debug|x86.Build.0 = Debug|Win32
+		{AA5269DD-776B-45B4-BB88-9CFDD15C35DA}.Release|Win32.ActiveCfg = Release|Win32
+		{AA5269DD-776B-45B4-BB88-9CFDD15C35DA}.Release|Win32.Build.0 = Release|Win32
+		{AA5269DD-776B-45B4-BB88-9CFDD15C35DA}.Release|x64.ActiveCfg = Release|x64
+		{AA5269DD-776B-45B4-BB88-9CFDD15C35DA}.Release|x64.Build.0 = Release|x64
+		{AA5269DD-776B-45B4-BB88-9CFDD15C35DA}.Release|x86.ActiveCfg = Release|Win32
+		{AA5269DD-776B-45B4-BB88-9CFDD15C35DA}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
