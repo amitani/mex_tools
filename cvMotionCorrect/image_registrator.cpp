@@ -110,7 +110,7 @@ bool ImageRegistrator::Align(const Mat &in, Mat *out, Point2d *d, Mat *heatmap) 
 void ImageRegistrator::Preprocess(const cv::Mat & in, cv::Mat & out) const
 {
 	in.convertTo(out, CV_32FC1, 1, normalization_offset_);
-	resize(out, out, Size(), 1.0 / factor_, 1.0 / factor_);
+	resize(out, out, Size(), 1.0 / factor_, 1.0 / factor_, cv::INTER_AREA);
 	Mat tmp1;
 	if (sigma_smoothing_)
 		GaussianBlur(out, tmp1, Size(0, 0), sigma_smoothing_ / factor_);
